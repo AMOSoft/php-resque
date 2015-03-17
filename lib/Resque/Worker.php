@@ -174,7 +174,7 @@ class Resque_Worker
 					break;
 				}
 
-				if($blocking === false)
+				if($blocking === false || $job === null)
 				{
 					// If no job was found, we sleep for $interval before continuing and checking again
 					$this->logger->log(Psr\Log\LogLevel::INFO, 'Sleeping for {interval}', array('interval' => $interval));
@@ -253,14 +253,14 @@ class Resque_Worker
 	}
 
 	/**
-	 * @param  bool            $blocking
-	 * @param  int             $timeout
-	 * @return object|boolean               Instance of Resque_Job if a job is found, false if not.
+	 * @param bool $blocking
+	 * @param int $timeout
+	 * @return object|boolean|null Instance of Resque_Job if a job is found, false if not, null if no queues.
 	 */
 	public function reserve($blocking = false, $timeout = null)
 	{
 		$queues = $this->queues();
-		if(!is_array($queues)) {
+		if(!is_array($queues) || count($queues) === 0) {
 			return;
 		}
 
