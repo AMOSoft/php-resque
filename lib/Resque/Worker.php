@@ -49,6 +49,11 @@ class Resque_Worker
 	 */
 	private $child = null;
 
+	/**
+	 * @var bool Does the parent worker pause on the dirty exit of a child worker ?
+	 */
+	private $pauseOnDirtyExit = false;
+
     /**
      * Instantiate a new worker, given a list of queues that it should be working
      * on. The list of queues should be supplied in the priority that they should
@@ -221,6 +226,9 @@ class Resque_Worker
 					$job->fail(new Resque_Job_DirtyExitException(
 						'Job exited with exit code ' . $exitStatus
 					));
+					if ($this->pauseOnDirtyExit) {
+						$this->pauseProcessing();
+					}
 				}
 			}
 
@@ -364,7 +372,7 @@ class Resque_Worker
 	 */
 	public function pauseProcessing()
 	{
-		$this->logger->log(Psr\Log\LogLevel::NOTICE, 'USR2 received; pausing job processing');
+		$this->logger->log(Psr\Log\LogLevel::NOTICE, 'Pausing job processing');
 		$this->paused = true;
 	}
 
@@ -374,7 +382,7 @@ class Resque_Worker
 	 */
 	public function unPauseProcessing()
 	{
-		$this->logger->log(Psr\Log\LogLevel::NOTICE, 'CONT received; resuming job processing');
+		$this->logger->log(Psr\Log\LogLevel::NOTICE, 'Resuming job processing');
 		$this->paused = false;
 	}
 
@@ -562,6 +570,16 @@ class Resque_Worker
 	public function setLogger(Psr\Log\LoggerInterface $logger)
 	{
 		$this->logger = $logger;
+	}
+
+	/**
+	 * Does the parent worker pause on the dirty exit of a child worker ?
+	 * 
+	 * @param bool $doPause
+	 */
+	public function setPauseOnDirtyExit($doPause = true)
+	{
+		$this->pauseOnDirtyExit = $doPause;
 	}
 }
 ?>
